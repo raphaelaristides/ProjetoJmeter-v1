@@ -20,8 +20,6 @@ pipeline {
 
     stages {
 
-        }
-
         stage('Configurar cenário') {
             steps {
                 script {
@@ -115,43 +113,41 @@ pipeline {
                 '''
             }
         }
-		
-		stage('Indicadores') {
-    steps {
-        powershell '''
-            & ".\\scripts\\Indicadores.ps1" `
-                -JtlFile "results\\$env:RESULT_NAME.jtl" `
-                -MaxErrorRate 1 `
-                -TR02P95MaxMs 2000 `
-                -TR03P95MaxMs 2000 `
-                -TR04P95MaxMs 2000 `
-                -TR05P95MaxMs 100
 
-            if ($LASTEXITCODE -ne 0) {
-                exit $LASTEXITCODE
+        stage('Indicadores') {
+            steps {
+                powershell '''
+                    & ".\\scripts\\Indicadores.ps1" `
+                        -JtlFile "results\\$env:RESULT_NAME.jtl" `
+                        -MaxErrorRate 1 `
+                        -TR02P95MaxMs 2000 `
+                        -TR03P95MaxMs 2000 `
+                        -TR04P95MaxMs 2000 `
+                        -TR05P95MaxMs 100
+
+                    if ($LASTEXITCODE -ne 0) {
+                        exit $LASTEXITCODE
+                    }
+                '''
             }
-        '''
-    }
-}
-		
+        }
     }
 
     post {
+        always {
+            archiveArtifacts(
+                artifacts: 'results/**/*.jtl, reports/**/*',
+                fingerprint: true,
+                allowEmptyArchive: true
+            )
+        }
 
-    always {
+        success {
+            echo 'Performance Indicadores aprovado.'
+        }
 
-        archiveArtifacts(
-            artifacts: 'results/**/*.jtl, reports/**/*',
-            fingerprint: true,
-            allowEmptyArchive: true
-        )
-    }
-
-    success {
-        echo 'Performance Indicadores aprovado.'
-    }
-
-    failure {
-        echo 'Performance Indicadores reprovado ou ocorreu falha tecnica.'
+        failure {
+            echo 'Performance Indicadores reprovado ou ocorreu falha tecnica.'
+        }
     }
 }
