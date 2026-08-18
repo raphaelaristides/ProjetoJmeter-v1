@@ -135,10 +135,10 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts(
-                artifacts: 'results/**/*.jtl, reports/**/*',
-                fingerprint: true,
-                allowEmptyArchive: true
+            archiveArtifacts( 
+			artifacts: 'results/**/*.jtl, results/**/*.txt, reports/**/*',
+			fingerprint: true,
+			allowEmptyArchive: true
             )
         }
 

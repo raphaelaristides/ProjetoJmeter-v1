@@ -94,26 +94,24 @@ $errorRate = [Math]::Round(
 
 $gateFailed = $false
 
-Write-Host ""
-Write-Host "=============================================="
-Write-Host " JMETER PERFORMANCE QUALITY GATE"
-Write-Host "=============================================="
-Write-Host ""
+$summary = @()
 
-Write-Host "Transacoes: $($transactions.Count)"
-Write-Host "Falhas: $($failedTransactions.Count)"
-Write-Host "Error Rate: $errorRate%"
-Write-Host ""
+$summary += "=============================================="
+$summary += " JMETER PERFORMANCE QUALITY GATE"
+$summary += "=============================================="
+$summary += ""
+$summary += "Arquivo: $JtlFile"
+$summary += "Transacoes: $($transactions.Count)"
+$summary += "Falhas: $($failedTransactions.Count)"
+$summary += "Error Rate: $errorRate% | Limite: < $MaxErrorRate%"
+$summary += ""
 
 if ($errorRate -ge $MaxErrorRate) {
-
-    Write-Host "[FAIL] Error Rate >= $MaxErrorRate%"
-
+    $summary += "[FAIL] Error Rate >= $MaxErrorRate%"
     $gateFailed = $true
-
-} else {
-
-    Write-Host "[PASS] Error Rate < $MaxErrorRate%"
+}
+else {
+    $summary += "[PASS] Error Rate < $MaxErrorRate%"
 }
 
 $rules = @(
@@ -156,7 +154,7 @@ foreach ($rule in $rules) {
 
     if ($samples.Count -eq 0) {
 
-        Write-Host "[FAIL] $($rule.Name) - sem samples"
+        $summary += "[FAIL] $($rule.Name) - sem samples"
 
         $gateFailed = $true
 
@@ -176,13 +174,12 @@ foreach ($rule in $rules) {
 
     if ($p95 -lt $rule.Limit) {
 
-        Write-Host `
-        "[PASS] $($rule.Name) | P95=${p95}ms | limite < $($rule.Limit)ms"
+        $summary += "[PASS] $($rule.Name) | P95=${p95}ms | Limite < $($rule.Limit)ms"
 
-    } else {
+    }
+    else {
 
-        Write-Host `
-        "[FAIL] $($rule.Name) | P95=${p95}ms | limite < $($rule.Limit)ms"
+        $summary += "[FAIL] $($rule.Name) | P95=${p95}ms | Limite < $($rule.Limit)ms"
 
         $gateFailed = $true
     }
@@ -192,18 +189,44 @@ Write-Host ""
 Write-Host "=============================================="
 
 if ($gateFailed) {
+$summary += ""
+$summary += "=============================================="
 
-    Write-Host " QUALITY GATE: FAILED"
+if ($gateFailed) {
 
-    Write-Host "=============================================="
+    $summary += " QUALITY GATE: FAILED"
 
+}
+else {
+
+    $summary += " QUALITY GATE: PASSED"
+}
+
+$summary += "=============================================="
+
+$jtlName = [System.IO.Path]::GetFileNameWithoutExtension($JtlFile)
+$summaryPath = Join-Path `
+    (Split-Path $JtlFile -Parent) `
+    "$jtlName-quality-gate.txt"
+
+$summary |
+    Set-Content `
+        -Path $summaryPath `
+        -Encoding UTF8
+
+$summary |
+    ForEach-Object {
+        Write-Host $_
+    }
+
+Write-Host ""
+Write-Host "Resumo salvo em:"
+Write-Host $summaryPath
+
+if ($gateFailed) {
     exit 1
-
-} else {
-
-    Write-Host " QUALITY GATE: PASSED"
-
-    Write-Host "=============================================="
+}
+else {
 
     exit 0
 }
