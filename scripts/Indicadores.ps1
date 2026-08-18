@@ -188,7 +188,6 @@ foreach ($rule in $rules) {
 Write-Host ""
 Write-Host "=============================================="
 
-if ($gateFailed) {
 $summary += ""
 $summary += "=============================================="
 
