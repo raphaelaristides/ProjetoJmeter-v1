@@ -155,4 +155,3 @@ pipeline {
         echo 'Performance Indicadores reprovado ou ocorreu falha tecnica.'
     }
 }
-}
